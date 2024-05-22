@@ -42,51 +42,58 @@
 
         const box = 20;
         let snake = [
-            { x: 10 * box, y: 10 * box },
-            { x: 10 * box, y: 11 * box }, // Add additional segments to the snake
-            { x: 10 * box, y: 12 * box } // Add additional segments to the snake
+            { x: 10 * box, y: 10 * box }
         ];
         let food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
         let score = 0;
 
         let direction = 'right';
 
-        document.addEventListener('keydown', changeDirection);
+        // Touch controls
+        let touchStartX = 0;
+        let touchStartY = 0;
 
-        function changeDirection(event) {
-            if (event.keyCode === 37 && direction !== 'right') direction = 'left';
-            else if (event.keyCode === 38 && direction !== 'down') direction = 'up';
-            else if (event.keyCode === 39 && direction !== 'left') direction = 'right';
-            else if (event.keyCode === 40 && direction !== 'up') direction = 'down';
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+
+        function handleTouchStart(event) {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        }
+
+        function handleTouchMove(event) {
+            const touchEndX = event.touches[0].clientX;
+            const touchEndY = event.touches[0].clientY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // Determine the direction based on swipe direction
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Horizontal swipe
+                if (deltaX > 0 && direction !== 'left') direction = 'right';
+                else if (deltaX < 0 && direction !== 'right') direction = 'left';
+            } else {
+                // Vertical swipe
+                if (deltaY > 0 && direction !== 'up') direction = 'down';
+                else if (deltaY < 0 && direction !== 'down') direction = 'up';
+            }
+
+            // Prevent scrolling when swiping
+            event.preventDefault();
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            snake.forEach(segment => {
-                ctx.fillStyle = 'green';
-                ctx.fillRect(segment.x, segment.y, box, box);
-            });
-
-            ctx.fillStyle = 'red';
-            ctx.fillRect(food.x, food.y, box, box);
-
-            ctx.fillStyle = 'black';
-            ctx.font = '20px Arial';
-            ctx.fillText('Score: ' + score, box, box);
-
             let snakeX = snake[0].x;
             let snakeY = snake[0].y;
 
-            let newHead = { x: snakeX, y: snakeY };
-
             // Move the snake
-            if (direction === 'left') newHead.x -= box;
-            if (direction === 'right') newHead.x += box;
-            if (direction === 'up') newHead.y -= box;
-            if (direction === 'down') newHead.y += box;
-
-            snake.unshift(newHead); // Add new head to the beginning of the snake
+            if (direction === 'left') snakeX -= box;
+            if (direction === 'right') snakeX += box;
+            if (direction === 'up') snakeY -= box;
+            if (direction === 'down') snakeY += box;
 
             // Check for collision with food
             if (snakeX === food.x && snakeY === food.y) {
@@ -95,6 +102,25 @@
             } else {
                 snake.pop(); // Remove the last segment of the snake if no food is eaten
             }
+
+            // Add new head to the beginning of the snake
+            let newHead = { x: snakeX, y: snakeY };
+            snake.unshift(newHead);
+
+            // Draw snake
+            snake.forEach(segment => {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(segment.x, segment.y, box, box);
+            });
+
+            // Draw food
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, box, box);
+
+            // Draw score
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, box, box);
 
             // Check for collision with walls or itself
             if (snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake.slice(1))) {

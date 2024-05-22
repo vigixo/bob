@@ -1,41 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-        }
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        #gameArea {
-            position: relative;
-        }
+    snake.forEach(segment => {
+        ctx.fillStyle = 'green';
+        ctx.fillRect(segment.x, segment.y, box, box);
+    });
 
-        #gameCanvas {
-            border: 2px solid #000;
-            background-color: #fff;
-        }
+    ctx.fillStyle = 'red';
+    ctx.fillRect(food.x, food.y, box, box);
 
-        #score {
-            text-align: center;
-            font-size: 24px;
-        }
-    </style>
-</head>
-<body>
-    <div id="gameArea">
-        <canvas id="gameCanvas"></canvas>
-    </div>
-    <div id="score">Score: 0</div>
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.fillText('Score: ' + score, box, box);
 
-    <script src="script.js"></script>
-</body>
-</html>
+    let snakeX = snake[0].x;
+    let snakeY = snake[0].y;
+
+    if (snakeX === food.x && snakeY === food.y) {
+        score++;
+        food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+    } else {
+        snake.pop();
+    }
+
+    let newHead = { x: snakeX, y: snakeY };
+
+    // Move the snake
+    if (direction === 'left') newHead.x -= box;
+    if (direction === 'right') newHead.x += box;
+    if (direction === 'up') newHead.y -= box;
+    if (direction === 'down') newHead.y += box;
+
+    snake.unshift(newHead); // Add new head to the beginning of the snake
+
+    // Check for collision with walls or itself
+    if (snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake.slice(1))) {
+        clearInterval(game);
+        alert('Game Over! Your score: ' + score);
+        window.location.reload();
+    }
+}
